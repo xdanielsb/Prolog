@@ -13,5 +13,13 @@ horoscopo(capricornio,22,12,20,1).
 horoscopo(acuario,21,1,18,2).
 horoscopo(piscis,19,2,20,3).
 
-signo(Dia,Mes,Signo) :- horoscopo(Signo,D1,M1,D2,M2),
-                        ( (Mes=M1,Dia>=D1) ; (Mes=M2,Dia=<D2) ).
+/*
+  In the other version, change (Mes=M1,Dia>=D1)  to (Mes=M1,Dia>D1) just tested with geminis
+*/
+
+signo(D,M,S):-  horoscopo(S,D1,M1,D2,M2),
+                 (
+                   (M=M1,D>=D1);
+                   (M=M2,D=<D2);
+                   (M1 is mod(M1, 12),M>M1,M<M2) %not necesary for this calendar
+                 ),!.
