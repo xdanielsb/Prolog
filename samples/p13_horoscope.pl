@@ -19,6 +19,15 @@ horoscopo(piscis,19,2,20,3).
 
 signo(D,M,S):-  horoscopo(S,D1,M1,D2,M2),
                  (
+                  D >= 1,
+                  M >= 1,
+                  M =< 12,
+                  ( (M = 8;M=6;M=4; M=11, D=<30);
+                    (M=2,D =< 28);
+                    (D=<31)
+                  )
+                 ),
+                 (
                    (M=M1,D>=D1);
                    (M=M2,D=<D2);
                    (M1 is mod(M1, 12),M>M1,M<M2) %not necesary for this calendar
