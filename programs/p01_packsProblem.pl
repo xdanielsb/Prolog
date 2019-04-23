@@ -15,15 +15,16 @@ element(pantalones,2, ligero, 2, no, yes).
 element(camisa, 1, ligero, 1, no, yes).
 element(camisa, 2, ligero, 1, no, yes).
 
-% generate list of types
+% generate list of types O(n)
 fragiles(L) :- findall((M,X),element(_,M,_,X,yes,_), L).
 pesados(L) :- findall((M,X),element(_,M,_,X,no,_), L).
 
-% decompress tuples into list
+% decompress tuples into list O(max(Xi))
 decompress((0, _), []):-!.
 decompress((A,X), [X|Ans]) :- B is (A-1), decompress((B, X), Ans).
 
-% append lists
+% append lists O(n+m)
+append(L,[], L):-!.
 append([], L, L):-!.
 append([X1|T1], L,[X1|T2]) :- append(T1, L, T2).
 
@@ -32,9 +33,20 @@ boxFragils([], []):-!.
 boxFragils( [(X,Y)|T], L) :- boxFragils(T, Ans1 ), decompress((X,Y), Ans2), append(Ans1, Ans2, L).
 
 % Compress Boxes
-%compress([], L, L).
-compress([X], [X],_):-!.
-compress([X,Y|T], [N1|L]):-
+compress([], []).
+compress([X], [X]):-!.
+compress([X,Y|T], Ans):-
   N1 is X+Y,
-  N1 <= 10,
-  compress(T, L).
+  (
+    (
+      N1 =< 10,
+      append([N1], T, Ans1),
+      compress(Ans1, Ans)
+    );
+    (
+      N1 > 10,((X =< Y, W is X, Z is Y);(Y < X, W is Y, Z is X) ),
+      append([W], T, Ans1),
+      compress(Ans1, Ans2),
+      append([Z], Ans2, Ans)
+    )
+  ).
