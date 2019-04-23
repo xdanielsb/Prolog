@@ -43,7 +43,14 @@ It is a restriction given to a relation, help to find a fact even is not explici
  - Must be written a period at the end of the fact or rule
  - objects can also begin with digits
  - string also can be written enclosed in quotes
- - variables names must start with a capital letter
+ - variables names must start with a capital letter or an underscore
  - :- means if , also called the neck symbol
  - , (comma) is called  conjuction (and) symbol
- - ; (semicolon) is called  disjunction (or) symbol 
+ - ; (semicolon) is called  disjunction (or) symbol
+
+
+
+# List
+Simple data structure, can be written as a Prolog atom as
+
+L = []
