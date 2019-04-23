@@ -1,9 +1,13 @@
 % element( name, number, weigth, size, fragil, foldable)
-% test element(_,_,_,_,_,_)
 
-:- use_module(library(aggregate)).
 author('Daniel', 'Santos').
 date('April', 2019).
+
+% modules
+:- use_module(library(aggregate)).
+
+% declare dynamics
+:- dynamic element/6.
 
 % facts
 element(libro, 1, pesado, 2, no, no).
@@ -56,3 +60,29 @@ compress([X,Y|T], Ans):-
 %  Unite the algorithm, omg the tricky part
 init(R1, R2) :-
   fragiles(L1), pesados(L2), boxCreate(L1, B1), boxCreate(L2, B2), compress(B1, R1), compress(B2, R2).
+
+
+% Insert data
+insert:-
+ write('Name  = '),  read(Name), nl,
+ write('Number = '),  read(Number), nl,
+ write('Weight = (pesado/liviano) '),  read(Weight), nl,
+ write('Size = '),  read(Size), nl,
+ write('Is it fragil?    (yes/no) = '),  read(Fragil), nl,
+ write('IS it foldeable? (yes/no) = '),  read(Folde), nl,
+ assertz(element( Name, Number, Weight, Size, Fragil,Folde)).
+
+
+% Show Data
+list:-
+  forall(element(Name, Number,_,_,_,_),(write(Number),write(' '),writeln(Name))).
+listf:-
+  forall(element(Name, Number,_,_,yes,_),(write(Number),write(' '),writeln(Name))).
+lists:-
+  forall(element(Name, Number,_,_,no,_),(write(Number),write(' '),writeln(Name))).
+
+
+
+
+
+% Execute this init( BoxFragiles, BoxSolid).
