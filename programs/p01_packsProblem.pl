@@ -2,11 +2,13 @@
 % test element(_,_,_,_,_,_)
 
 :- use_module(library(aggregate)).
+author('Daniel', 'Santos').
+date('April', 2019).
 
 % facts
 element(libro, 1, pesado, 2, no, no).
 element(libro, 2, pesado, 2, no, no).
-element(lampara, 1, mediano, 8, yes, no).
+element(lampara, 2, mediano, 8, yes, no).
 element(platos, 1, mediano, 5, yes, no).
 element(abrigo, 1, ligero, 3, no, no).
 element(tv, 1, pesado, 10, yes, no).
@@ -29,8 +31,8 @@ append([], L, L):-!.
 append([X1|T1], L,[X1|T2]) :- append(T1, L, T2).
 
 % Generate boxes
-boxFragils([], []):-!.
-boxFragils( [(X,Y)|T], L) :- boxFragils(T, Ans1 ), decompress((X,Y), Ans2), append(Ans1, Ans2, L).
+boxCreate([], []):-!.
+boxCreate( [(X,Y)|T], L) :- boxCreate(T, Ans1 ), decompress((X,Y), Ans2), append(Ans1, Ans2, L).
 
 % Compress Boxes
 compress([], []).
@@ -50,3 +52,7 @@ compress([X,Y|T], Ans):-
       append([Z], Ans2, Ans)
     )
   ).
+
+%  Unite the algorithm, omg the tricky part
+init(R1, R2) :-
+  fragiles(L1), pesados(L2), boxCreate(L1, B1), boxCreate(L2, B2), compress(B1, R1), compress(B2, R2).
