@@ -22,30 +22,29 @@ element(pantalones,2, ligero, 2, no, yes).
 element(camisa, 1, ligero, 1, no, yes).
 element(camisa, 2, ligero, 1, no, yes).
 
-% generate list of types O(n)
-fragiles(L) :- findall((M,X),element(_,M,_,X,yes,_), L).
-% It is possible combine medium elements and heavy
-% pesados no fragiles
-pesados(L) :- findall((M,X),element(_,M,pesado,X,no,_), L).
-medianos(L) :- findall((M,X),element(_,M,mediano,X,no,_), L).
-% light elements could be combine with everyone
-ligeros(L) :- findall((M,X),element(_,M,ligero,X,no,_), L).
 
-% decompress tuples into list O(max(Xi))
-decompress((0, _), []):-!.
-decompress((A,X), [(X,1)|Ans]) :- B is (A-1), decompress((B, X), Ans).
+fragiles(L) :- findall((M,X),element(_,M,_,X,yes,_), L).                      % fragiles
+pesados(L) :- findall((M,X),element(_,M,pesado,X,no,_), L).                   % pesados no fragiles
+medianos(L) :- findall((M,X),element(_,M,mediano,X,no,_), L).                 % medianos no fragiles
+ligeros(L) :- findall((M,X),element(_,M,ligero,X,no,_), L).                   % ligero no fragiles
 
-% append lists O(n+m)
-append(L,[], L):-!.
+decompress((0, _), []):-!.                                                    % decompress tuples into list O(max(Xi))
+decompress((A,X), [(X,1)|Ans]) :-
+  B is (A-1),
+  decompress((B, X), Ans).
+
+append(L,[], L):-!.                                                           % append lists O(n+m)
 append([], L, L):-!.
-append([X1|T1], L,[X1|T2]) :- append(T1, L, T2).
+append([X1|T1], L,[X1|T2]) :-
+  append(T1, L, T2).
 
-% Generate boxes
-boxCreate([], []):-!.
-boxCreate( [(X,Y)|T], L) :- boxCreate(T, Ans1 ), decompress((X,Y), Ans2), append(Ans1, Ans2, L).
+boxCreate([], []):-!.                                                         % Generate boxes
+boxCreate( [(X,Y)|T], L) :-
+  boxCreate(T, Ans1 ),
+  decompress((X,Y), Ans2),
+   append(Ans1, Ans2, L).
 
-% Compress Boxes not restricttion of amount
-compress([], []).
+compress([], []).                                                             % Compress Boxes not restricttion of amount
 compress([(X,Y)], [(X,Y)]):-!.
 compress([(X,C1),(Y, C2)|T], Ans):-
   N1 is X+Y,
@@ -58,16 +57,17 @@ compress([(X,C1),(Y, C2)|T], Ans):-
     );
     (
       (N1 > 10),
-      ((X =< Y, W is X, Z is Y, C3 is C1, C4 is C2);(Y < X, W is Y, Z is X, C3 is C2, C4 is C1) ),
+      (
+       (X =< Y, W is X, Z is Y, C3 is C1, C4 is C2);
+       (Y < X, W is Y, Z is X, C3 is C2, C4 is C1)
+      ),
       append([(W, C3)], T, Ans1),
       compress(Ans1, Ans2),
       append([(Z, C4)], Ans2, Ans)
     )
   ).
 
-
-% Compress Boxes each box < 4 heavier elements,
-compress2([], []).
+compress2([], []).                                                            % Compress Boxes each box < 4 heavier elements,
 compress2([(X,Y)], [(X,Y)]):-!.
 compress2([(X,C1),(Y, C2)|T], Ans):-
   N1 is X+Y,
@@ -81,27 +81,27 @@ compress2([(X,C1),(Y, C2)|T], Ans):-
     );
     (
       (N1 > 10; CT>=4),
-      ((X =< Y, W is X, Z is Y, C3 is C1, C4 is C2);(Y < X, W is Y, Z is X, C3 is C2, C4 is C1) ),
+      (
+       (X =< Y, W is X, Z is Y, C3 is C1, C4 is C2);
+       (Y < X, W is Y, Z is X, C3 is C2, C4 is C1)
+      ),
       append([(W, C3)], T, Ans1),
       compress2(Ans1, Ans2),
       append([(Z, C4)], Ans2, Ans)
     )
   ).
 
-
-% Create boxes {heavy,medium, fragile}
-createBoxes(HFMBoxes) :-
-  fragiles(L1), pesados(L2), medianos(L3),                      % create list objects, they are mutual exclusive
-  boxCreate(L1, B1), boxCreate(L2, B2), boxCreate(L3, B3),      % put them in individual boxes, divided in categories
-  compress(B1, FragileBoxes), compress2(B2, C2 ),               % Unite fragiles objects. Unite heavier objects
-  append(B3, C2, HB),                                           % Unite boxes Heavy and Medium
-  compress(HB, HeavyBoxes),                                     % Compress the last union
-  append(HeavyBoxes, FragileBoxes, R1),                         % Unite boxes
-  sort(R1, HFMBoxes).                                           % sort
+createBoxes(HFMBoxes) :-                                                       % Create boxes {heavy,medium, fragile}
+  fragiles(L1), pesados(L2), medianos(L3),                                     % create list objects, they are mutual exclusive
+  boxCreate(L1, B1), boxCreate(L2, B2), boxCreate(L3, B3),                     % put them in individual boxes, divided in categories
+  compress(B1, FragileBoxes), compress2(B2, C2 ),                              % Unite fragiles objects. Unite heavier objects
+  append(B3, C2, HB),                                                          % Unite boxes Heavy and Medium
+  compress(HB, HeavyBoxes),                                                    % Compress the last union
+  append(HeavyBoxes, FragileBoxes, R1),                                        % Unite boxes
+  sort(R1, HFMBoxes).                                                          % sort
 
 
-% Unite HFMBoxes with light boxes.
-joinT(B, [], Ans, Rem):-
+joinT(B, [], Ans, Rem):-                                                       % Unite HFMBoxes with light boxes.
   compress(Rem, C),
   append(B, C, Ans).
 joinT([(X,C1)|T1], [(Y,C2)|T2],Ans, Rem):-
@@ -120,7 +120,7 @@ joinT([(X,C1)|T1], [(Y,C2)|T2],Ans, Rem):-
   ).
 
 
-init(Ans) :-
+init(Ans) :-                                                                   % Utility to return the boxes
   ligeros(L4), boxCreate(L4, B4),
   createBoxes(HFMBoxes),
   joinT(HFMBoxes, B4, Ans, []).
