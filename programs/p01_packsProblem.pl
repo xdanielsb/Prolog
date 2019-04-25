@@ -14,6 +14,7 @@ element(libro, 1, pesado, 2, no, no).
 element(libro, 2, pesado, 2, no, no).
 element(lampara, 1, mediano, 8, yes, no).
 element(platos, 1, mediano, 5, yes, no).
+element(platos, 1, mediano, 5, no, no).
 element(abrigo, 1, ligero, 3, no, no).
 element(tv, 1, pesado, 10, yes, no).
 element(pantalones, 1, ligero, 2, no, yes).
@@ -65,7 +66,7 @@ compress([(X,C1),(Y, C2)|T], Ans):-
   ).
 
 
-% Compress Boxes each box < 4 heavier elements
+% Compress Boxes each box < 4 heavier elements,
 compress2([], []).
 compress2([(X,Y)], [(X,Y)]):-!.
 compress2([(X,C1),(Y, C2)|T], Ans):-
@@ -88,13 +89,41 @@ compress2([(X,C1),(Y, C2)|T], Ans):-
   ).
 
 
-% Create boxes of fragiles y pesados no ligeros
-createLightHeavy(R1, R2) :-
-  fragiles(L1), pesados(L2),
-   boxCreate(L1, B1), boxCreate(L2, B2),
-   compress(B1, R1), compress2(B2, R2).
+% Create boxes {heavy,medium, fragile}
+createBoxes(HFMBoxes) :-
+  fragiles(L1), pesados(L2), medianos(L3),                      % create list objects, they are mutual exclusive
+  boxCreate(L1, B1), boxCreate(L2, B2), boxCreate(L3, B3),      % put them in individual boxes, divided in categories
+  compress(B1, FragileBoxes), compress2(B2, C2 ),               % Unite fragiles objects. Unite heavier objects
+  append(B3, C2, HB),                                           % Unite boxes Heavy and Medium
+  compress(HB, HeavyBoxes),                                     % Compress the last union
+  append(HeavyBoxes, FragileBoxes, R1),                         % Unite boxes
+  sort(R1, HFMBoxes).                                           % sort
 
-% try to join as many boxes of medium packages with heavy boxes
+
+% Unite HFMBoxes with light boxes.
+joinT(B, [], Ans, Rem):-
+  compress(Rem, C),
+  append(B, C, Ans).
+joinT([(X,C1)|T1], [(Y,C2)|T2],Ans, Rem):-
+  N is ( X + Y),
+  C is ( C1+C2),
+  (
+    (
+      N =< 10,
+      sort([(N,C)|T1], A2),
+      joinT(A2, T2, Ans, Rem)
+    );
+    (
+      N > 10,
+      joinT([(X,C1)|T1], T2, Ans, [(Y, C2)|Rem])
+    )
+  ).
+
+
+init(Ans) :-
+  ligeros(L4), boxCreate(L4, B4),
+  createBoxes(HFMBoxes),
+  joinT(HFMBoxes, B4, Ans, []).
 
 
 % Insert data
@@ -104,7 +133,7 @@ insert:-
  write('Weight = (pesado/liviano) '),  read(Weight), nl,
  write('Size = '),  read(Size), nl,
  write('Is it fragil?    (yes/no) = '),  read(Fragil), nl,
- write('IS it foldeable? (yes/no) = '),  read(Folde), nl,
+ write('Is it foldeable? (yes/no) = '),  read(Folde), nl,
  assertz(element( Name, Number, Weight, Size, Fragil,Folde)).
 
 
