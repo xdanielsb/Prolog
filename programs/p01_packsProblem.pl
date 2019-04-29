@@ -2,6 +2,9 @@
 
 author('Daniel', 'Santos').
 date('April', 2019).
+desc('Description', 'Greedy algorithm to pack elements of boxes').
+desc('Note', 'By reduction is a subcase of knapsack problem, so NP-Hard & NP-Complete').
+desc('Complexity Time', '~O(MaxV*N*N*log(N)), could be reduced to O(MaxV*N*log(N)) if I would have deciphered how to use memoization in prolog :`(, coming soon :) ').
 
 % modules
 :- use_module(library(aggregate)).
@@ -14,7 +17,6 @@ element(libro, 1, pesado, 2, no, no).
 element(libro, 2, pesado, 2, no, no).
 element(lampara, 1, mediano, 8, yes, no).
 element(platos, 1, mediano, 5, yes, no).
-element(platos, 1, mediano, 5, no, no).
 element(abrigo, 1, ligero, 3, no, no).
 element(tv, 1, pesado, 10, yes, no).
 element(pantalones, 1, ligero, 2, no, yes).
@@ -44,7 +46,7 @@ boxCreate( [(X,Y)|T], L) :-
   decompress((X,Y), Ans2),
    append(Ans1, Ans2, L).
 
-compress([], []).                                                             % Compress Boxes not restricttion of amount
+compress([], []).                                                             % Greedy algorithm to Compress Boxes not restricttion of amount
 compress([(X,Y)], [(X,Y)]):-!.
 compress([(X,C1),(Y, C2)|T], Ans):-
   N1 is X+Y,
@@ -57,7 +59,7 @@ compress([(X,C1),(Y, C2)|T], Ans):-
     );
     (
       (N1 > 10),
-      (
+      ( % greedy
        (X =< Y, W is X, Z is Y, C3 is C1, C4 is C2);
        (Y < X, W is Y, Z is X, C3 is C2, C4 is C1)
       ),
@@ -67,7 +69,7 @@ compress([(X,C1),(Y, C2)|T], Ans):-
     )
   ).
 
-compress2([], []).                                                            % Compress Boxes each box < 4 heavier elements,
+compress2([], []).                                                            % Greedy algorithm to Compress Boxes each box < 4 heavier elements,
 compress2([(X,Y)], [(X,Y)]):-!.
 compress2([(X,C1),(Y, C2)|T], Ans):-
   N1 is X+Y,
@@ -81,7 +83,7 @@ compress2([(X,C1),(Y, C2)|T], Ans):-
     );
     (
       (N1 > 10; CT>=4),
-      (
+      ( % greedy
        (X =< Y, W is X, Z is Y, C3 is C1, C4 is C2);
        (Y < X, W is Y, Z is X, C3 is C2, C4 is C1)
       ),
@@ -91,17 +93,17 @@ compress2([(X,C1),(Y, C2)|T], Ans):-
     )
   ).
 
-createBoxes(HFMBoxes) :-                                                       % Create boxes {heavy,medium, fragile}
-  fragiles(L1), pesados(L2), medianos(L3),                                     % create list objects, they are mutual exclusive
-  boxCreate(L1, B1), boxCreate(L2, B2), boxCreate(L3, B3),                     % put them in individual boxes, divided in categories
-  compress(B1, FragileBoxes), compress2(B2, C2 ),                              % Unite fragiles objects. Unite heavier objects
-  append(B3, C2, HB),                                                          % Unite boxes Heavy and Medium
+createBoxes(HFMBoxes) :-                                                       %
+  fragiles(L1), pesados(L2), medianos(L3),                                     % Fetch the array with  {fragiles, pesados medianos}, these arrays are mutual exclusive so their intersection among any pair is void
+  boxCreate(L1, B1), boxCreate(L2, B2), boxCreate(L3, B3),                     % create a first version of not optimal boxes (all with just one element in each box ), for example if there is two glass  B1 = [(w1, 1), (w1,1)] where w1 stands out the weight, and 1 represent the quantity
+  compress(B1, FragileBoxes), compress2(B2, C2 ),                              % Unite fragiles objects. Unite heavier objects compress the boxes of fragil objects
+  append(B3, C2, HB),                                                          % Unite boxes Heavy and Medium, due Medium just could be with Heavy Boxes
   compress(HB, HeavyBoxes),                                                    % Compress the last union
-  append(HeavyBoxes, FragileBoxes, R1),                                        % Unite boxes
-  sort(R1, HFMBoxes).                                                          % sort
+  append(HeavyBoxes, FragileBoxes, R1),                                        % Unite boxes R1 = [HeavyBoxes, FragilBoxes]
+  sort(R1, HFMBoxes).                                                          % sort increasing
 
 
-joinT(B, [], Ans, Rem):-                                                       % Unite HFMBoxes with light boxes.
+joinT(B, [], Ans, Rem):-                                                       % Unite Heavy Fragil and Medium (HFM) Boxes with light boxes. Light elments could be with whatever type of element if the boxes has the enough space
   compress(Rem, C),
   append(B, C, Ans).
 joinT([(X,C1)|T1], [(Y,C2)|T2],Ans, Rem):-
@@ -110,7 +112,7 @@ joinT([(X,C1)|T1], [(Y,C2)|T2],Ans, Rem):-
   (
     (
       N =< 10,
-      sort([(N,C)|T1], A2),
+      sort([(N,C)|T1], A2), % greedy
       joinT(A2, T2, Ans, Rem)
     );
     (
@@ -123,18 +125,20 @@ joinT([(X,C1)|T1], [(Y,C2)|T2],Ans, Rem):-
 init(Desc, Size) :-                                                                   % Utility to return the boxes
   ligeros(L4), boxCreate(L4, B4),
   createBoxes(HFMBoxes),
-  joinT(HFMBoxes, B4, Desc, []),
+  joinT(HFMBoxes, B4, X, []),
+  sort(X, Desc),
   length(Desc, Size).
 
 
 % Insert data
 insert:-
+ write('Please write all in lower case letters and finish the text with a period (.), after that press enter'),nl,
  write('Name  = '),  read(Name), nl,
  write('Number = '),  read(Number), nl,
- write('Weight = (pesado/liviano) '),  read(Weight), nl,
+ write('Weight = (pesado. or mediano . or liviano.) '),  read(Weight), nl,
  write('Size = '),  read(Size), nl,
- write('Is it fragil?    (yes/no) = '),  read(Fragil), nl,
- write('Is it foldeable? (yes/no) = '),  read(Folde), nl,
+ write('Is it fragil?    (yes or no) = '),  read(Fragil), nl,
+ write('Is it foldeable? (yes or no) = '),  read(Folde), nl,
  assertz(element( Name, Number, Weight, Size, Fragil,Folde)).
 
 
@@ -148,7 +152,33 @@ listm:-
 listl:-
   forall(element(Name,Number,ligero,_,no,_),(write(Number),write(' '),writeln(Name))).
 
+:- write(' Hi User you can do the following operations in this program'),nl,nl,
+   write(' \t 1. Write (insert.) without the parenthesis to insert a new register  '), nl,
+   write(' \t 2. Write (init(Boxes, Size).) to see the results after  pack the elements in the the boxes,  each pair of the list  (Wi, n)  stands out a box where Wi is the weight of that box and n is the number of elements in the box'), nl,
+   write(' \t 3. Write any option of (listf. or listp or listm or listl) without the parenthesis to show the list of fragiles, pesados no fragiles, medium no fragiles and light no fragiles objects respectively, (each list is mutual exclusive) '), nl.
 
 
 
-% Execute this init(Desc, Size).
+/* test real Data
+  % pack fragile objects = { 1 plato w={5}, 1 lampara w = {8}, tv w = {10} }
+  BoxesF = [ (5,1), (8,1), (10,1)]
+
+  % pack heavy objects not fragile = {1 libro w={2}, 2 libros w={2} each one, }
+  BoxesH = [ (6,3)]
+
+  % Pack medium not fragile objects in BoxesH = {}
+  BoxesH = [ (6,3)]
+
+  % Unite list BoxesF y BoxesH command createBoxes(Boxes).
+  Boxes = [ (5,1),(6,3), (8,1), (10,1)]
+
+  % Pack light objects in Boxes = {1 abrigo w ={3}, 1 pantalon w={2}, 2 pantalones w={2}, 1 camisa w={1}, 2 camisas w={1}}
+  % these are packed in increasing order, command init(Boxes, Size).
+  Boxes = [ (6,2),(6,3), (8,1), (10,1)] camisa w =1
+  Boxes = [ (6,3),(7,3), (8,1), (10,1)] camisa w =1
+  Boxes = [ (7,3),(7,4), (8,1), (10,1)] camisa w =1
+  Boxes = [ (7,4),(8,1), (9,4), (10,1)] pantalon w = 2
+  Boxes = [ (8,1),(9,4), (9,5) (10,1)] pantalon w = 2
+  Boxes = [ (9,4),(9,5), (10,1), (10,2)] pantalon w = 2
+  Boxes = [ (3,1), (9,4),(9,5), (10,1), (10,2)] abrigo w = 3
+*/
