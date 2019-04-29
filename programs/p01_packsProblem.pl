@@ -100,7 +100,7 @@ createBoxes(HFMBoxes) :-                                                       %
   append(B3, C2, HB),                                                          % Unite boxes Heavy and Medium, due Medium just could be with Heavy Boxes
   compress(HB, HeavyBoxes),                                                    % Compress the last union
   append(HeavyBoxes, FragileBoxes, R1),                                        % Unite boxes R1 = [HeavyBoxes, FragilBoxes]
-  sort(R1, HFMBoxes).                                                          % sort increasing
+  msort(R1, HFMBoxes).                                                          % sort increasing
 
 
 joinT(B, [], Ans, Rem):-                                                       % Unite Heavy Fragil and Medium (HFM) Boxes with light boxes. Light elments could be with whatever type of element if the boxes has the enough space
@@ -112,7 +112,7 @@ joinT([(X,C1)|T1], [(Y,C2)|T2],Ans, Rem):-
   (
     (
       N =< 10,
-      sort([(N,C)|T1], A2), % greedy
+      msort([(N,C)|T1], A2), % greedy
       joinT(A2, T2, Ans, Rem)
     );
     (
@@ -126,7 +126,7 @@ init(Desc, Size) :-                                                             
   ligeros(L4), boxCreate(L4, B4),
   createBoxes(HFMBoxes),
   joinT(HFMBoxes, B4, X, []),
-  sort(X, Desc),
+  msort(X, Desc),
   length(Desc, Size).
 
 
