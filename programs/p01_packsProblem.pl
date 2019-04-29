@@ -120,10 +120,11 @@ joinT([(X,C1)|T1], [(Y,C2)|T2],Ans, Rem):-
   ).
 
 
-init(Ans) :-                                                                   % Utility to return the boxes
+init(Desc, Size) :-                                                                   % Utility to return the boxes
   ligeros(L4), boxCreate(L4, B4),
   createBoxes(HFMBoxes),
-  joinT(HFMBoxes, B4, Ans, []).
+  joinT(HFMBoxes, B4, Desc, []),
+  length(Desc, Size).
 
 
 % Insert data
@@ -137,16 +138,17 @@ insert:-
  assertz(element( Name, Number, Weight, Size, Fragil,Folde)).
 
 
-% Show Data
-list:-
-  forall(element(Name, Number,_,_,_,_),(write(Number),write(' '),writeln(Name))).
+% Show Data, different categories to pack boxes, given the filters in [26 29] lines
 listf:-
-  forall(element(Name, Number,_,_,yes,_),(write(Number),write(' '),writeln(Name))).
-lists:-
-  forall(element(Name, Number,_,_,no,_),(write(Number),write(' '),writeln(Name))).
+  forall(element(Name,Number,_,_,yes,_),(write(Number),write(' '),writeln(Name))).
+listp:-
+  forall(element(Name,Number,pesado,_,no,_),(write(Number),write(' '),writeln(Name))).
+listm:-
+  forall(element(Name,Number,mediano,_,no,_),(write(Number),write(' '),writeln(Name))).
+listl:-
+  forall(element(Name,Number,ligero,_,no,_),(write(Number),write(' '),writeln(Name))).
 
 
 
 
-
-% Execute this init( BoxFragiles, BoxSolid).
+% Execute this init(Desc, Size).
